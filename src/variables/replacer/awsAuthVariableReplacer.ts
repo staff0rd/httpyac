@@ -1,6 +1,6 @@
 import { ProcessorContext } from '../../models';
 import { URL } from 'url';
-import aws4 = require('aws4');
+import aws4 from 'aws4';
 import { ParserRegex } from '../../parser';
 import * as utils from '../../utils';
 
