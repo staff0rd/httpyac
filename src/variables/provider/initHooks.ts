@@ -4,7 +4,7 @@ import { provideIntellijVariables, provideIntellijEnvironments } from './intelli
 import { provideIntellijGlobalVariables } from './intellijGlobalVariableProvider';
 import { ProvideVariablesHook, ProvideEnvironmentsHook } from '../../models';
 
-export enum VariableProviderType{
+export enum VariableProviderType {
   config = 'config',
   dotenv = 'dotenv',
   httpFileImports = 'httpFileImports',

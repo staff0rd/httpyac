@@ -8,7 +8,7 @@ export function verboseMetaDataHandler(type: string, _value: string | undefined,
       async beforeLoop() {
         log.options.level = level;
         return true;
-      }
+      },
     });
     return true;
   }

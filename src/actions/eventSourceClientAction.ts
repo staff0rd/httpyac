@@ -22,7 +22,7 @@ export class EventSourceClientAction implements models.HttpRegionAction {
 
   private async requestEventSource(
     request: models.EventSourceRequest,
-    context: models.ProcessorContext
+    context: models.ProcessorContext,
   ): Promise<models.HttpResponse> {
     const { httpRegion } = context;
 
@@ -39,7 +39,7 @@ export class EventSourceClientAction implements models.HttpRegionAction {
     options.headers = headers;
 
     const responseTemplate: Partial<models.HttpResponse> = {
-      request
+      request,
     };
     const eventStream: { [key: string]: Array<unknown> } = {};
     const loadingPromises: Array<Promise<unknown>> = [];
@@ -90,14 +90,14 @@ export class EventSourceClientAction implements models.HttpRegionAction {
     }
   }
 
-  private isEventType(evt: unknown) : evt is {type: string} {
+  private isEventType(evt: unknown): evt is { type: string } {
     const data = evt as { type: string };
     return !!data?.type;
   }
 
   private toMergedHttpResponse(
     data: Record<string, Array<unknown>>,
-    responseTemplate: Partial<models.HttpResponse>
+    responseTemplate: Partial<models.HttpResponse>,
   ): models.HttpResponse {
     const response = this.toHttpResponse(data, responseTemplate);
     if (data.error) {
@@ -121,7 +121,7 @@ export class EventSourceClientAction implements models.HttpRegionAction {
       contentType: {
         mimeType: 'application/json',
         charset: 'UTF-8',
-        contentType: 'application/json; charset=utf-8'
+        contentType: 'application/json; charset=utf-8',
       },
     };
     if (this.isEventType(data) && data.type === 'error') {
@@ -136,7 +136,7 @@ export class EventSourceClientAction implements models.HttpRegionAction {
   }
 }
 
-interface EventSourceMessageEvent{
+interface EventSourceMessageEvent {
   type: string;
   data: unknown;
 }

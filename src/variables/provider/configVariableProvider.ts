@@ -12,9 +12,8 @@ export async function provideConfigEnvironments(context: VariableProviderContext
 
 export async function provideConfigVariables(
   envs: string[] | undefined,
-  context: VariableProviderContext
+  context: VariableProviderContext,
 ): Promise<Variables> {
-
   const variables: Variables[] = [];
 
   if (context.config?.environments) {

@@ -6,20 +6,19 @@ import * as utils from '../utils';
 import { fileProvider, log, userInteractionProvider } from '../io';
 import { loadPackageDefinition } from '@grpc/grpc-js';
 
-export interface ProtoProcessorContext extends models.ProcessorContext{
+export interface ProtoProcessorContext extends models.ProcessorContext {
   options: {
-    protoDefinitions?: Record<string, models.ProtoDefinition>
-  }
+    protoDefinitions?: Record<string, models.ProtoDefinition>;
+  };
 }
 
 export async function parseProtoImport(
   getLineReader: models.getHttpLineGenerator,
-  context: models.ParserContext
+  context: models.ParserContext,
 ): Promise<models.HttpRegionParserResult> {
   const lineReader = getLineReader();
   const next = lineReader.next();
   if (!next.done) {
-
     const matchProto = ParserRegex.grpc.proto.exec(next.value.textLine);
 
     if (matchProto?.groups?.fileName) {
@@ -38,19 +37,20 @@ export async function parseProtoImport(
 
       const result: models.HttpRegionParserResult = {
         nextParserLine: next.value.line,
-        symbols
+        symbols,
       };
 
-      const headersResult = parserUtils.parseSubsequentLines(lineReader, [
-        parserUtils.parseComments,
-        parserUtils.parseRequestHeaderFactory(protoDefinition.loaderOptions),
-        parserUtils.parseDefaultHeadersFactory(
-          (headers, context: ProtoProcessorContext) => Object.assign(
-            context.options.protoDefinitions?.[protoDefinition.fileName].loaderOptions,
-            headers
-          )
-        ),
-      ], context);
+      const headersResult = parserUtils.parseSubsequentLines(
+        lineReader,
+        [
+          parserUtils.parseComments,
+          parserUtils.parseRequestHeaderFactory(protoDefinition.loaderOptions),
+          parserUtils.parseDefaultHeadersFactory((headers, context: ProtoProcessorContext) =>
+            Object.assign(context.options.protoDefinitions?.[protoDefinition.fileName].loaderOptions, headers),
+          ),
+        ],
+        context,
+      );
 
       if (headersResult) {
         result.nextParserLine = headersResult.nextLine || result.nextParserLine;
@@ -59,8 +59,7 @@ export async function parseProtoImport(
         }
       }
 
-      context.httpRegion.hooks.execute.addObjHook(obj => obj.process,
-        new ProtoImportAction(protoDefinition));
+      context.httpRegion.hooks.execute.addObjHook(obj => obj.process, new ProtoImportAction(protoDefinition));
 
       context.httpRegion.hooks.execute.addInterceptor(new ProtoDefinitionCreationInterceptor(protoDefinition));
       return result;
@@ -82,7 +81,7 @@ export class ProtoImportAction implements models.HttpRegionAction {
       definition.packageDefinition = await utils.replaceFilePath(
         this.protoDefinition.fileName,
         context,
-        (path: models.PathLike) => load(fileProvider.fsPath(path), options)
+        (path: models.PathLike) => load(fileProvider.fsPath(path), options),
       );
       if (definition.packageDefinition) {
         definition.grpcObject = loadPackageDefinition(definition.packageDefinition);
@@ -97,7 +96,7 @@ export class ProtoImportAction implements models.HttpRegionAction {
     const optionsScript = utils.toMultiLineString(
       Object.entries(options)
         .filter(([, value]) => utils.isString(value))
-        .map(([key, value]) => `${key}: ${value},`)
+        .map(([key, value]) => `${key}: ${value},`),
     );
     try {
       Object.assign(options, await utils.evalExpression(`{${optionsScript}}`, context));
@@ -115,18 +114,18 @@ type ExecuteInterceptor = models.HookInterceptor<models.ProcessorContext, boolea
 export class ProtoDefinitionCreationInterceptor implements ExecuteInterceptor {
   id = models.ActionType.protoCreate;
 
-  constructor(private readonly protoDefinition: models.ProtoDefinition) { }
+  constructor(private readonly protoDefinition: models.ProtoDefinition) {}
 
   async beforeLoop(
-    context: models.HookTriggerContext<ProtoProcessorContext, boolean | undefined>
+    context: models.HookTriggerContext<ProtoProcessorContext, boolean | undefined>,
   ): Promise<boolean | undefined> {
     context.arg.options.protoDefinitions = Object.assign({}, context.arg.options.protoDefinitions, {
       [this.protoDefinition.fileName]: {
         fileName: this.protoDefinition.fileName,
         loaderOptions: {
-          ...this.protoDefinition.loaderOptions
-        }
-      }
+          ...this.protoDefinition.loaderOptions,
+        },
+      },
     });
 
     return true;

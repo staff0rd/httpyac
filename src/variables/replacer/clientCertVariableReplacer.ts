@@ -7,7 +7,7 @@ import { fileProvider } from '../../io';
 export async function clientCertVariableReplacer(
   text: unknown,
   type: models.VariableType | string,
-  context: models.ProcessorContext
+  context: models.ProcessorContext,
 ): Promise<unknown> {
   const { request, httpRegion, httpFile } = context;
   if (isString(text) && isHttpRequest(request) && !httpRegion.metaData.noClientCert) {
@@ -22,12 +22,16 @@ export async function clientCertVariableReplacer(
     } else if (type.toLowerCase().endsWith('clientcert')) {
       const match = ParserRegex.auth.clientCert.exec(text);
       if (match?.groups?.cert || match?.groups?.pfx) {
-        await setClientCertificateOptions(request, {
-          cert: match.groups.cert,
-          key: match.groups.key,
-          pfx: match.groups.pfx,
-          passphrase: match.groups.passphrase,
-        }, httpFile);
+        await setClientCertificateOptions(
+          request,
+          {
+            cert: match.groups.cert,
+            key: match.groups.key,
+            pfx: match.groups.pfx,
+            passphrase: match.groups.passphrase,
+          },
+          httpFile,
+        );
         return undefined;
       }
     }
@@ -46,20 +50,20 @@ function createUrl(url: string): URL | undefined {
 async function setClientCertificateOptions(
   request: models.HttpRequest,
   clientCertifcateOptions: models.ClientCertificateOptions,
-  httpFile: models.HttpFile
+  httpFile: models.HttpFile,
 ) {
   const dir = fileProvider.dirname(httpFile.fileName);
   request.https = Object.assign({}, request.https, {
     certificate: await resolveFile(clientCertifcateOptions.cert, dir),
     key: await resolveFile(clientCertifcateOptions.key, dir),
     pfx: await resolveFile(clientCertifcateOptions.pfx, dir),
-    passphrase: clientCertifcateOptions.passphrase
+    passphrase: clientCertifcateOptions.passphrase,
   });
 }
 
 async function resolveFile(
   fileName: models.PathLike | undefined,
-  dir: models.PathLike | undefined
+  dir: models.PathLike | undefined,
 ): Promise<Buffer | undefined> {
   if (fileName) {
     if (isString(fileName)) {

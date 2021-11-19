@@ -6,7 +6,7 @@ import { log } from '../../io';
 export async function javascriptVariableReplacer(
   text: unknown,
   type: VariableType | string,
-  context: ProcessorContext
+  context: ProcessorContext,
 ): Promise<unknown> {
   if (!utils.isString(text)) {
     return text;

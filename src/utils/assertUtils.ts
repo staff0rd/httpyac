@@ -14,7 +14,7 @@ export function assertMaxTotalTime(response: HttpResponse, maxTotalTime: number)
 export function assertHeaderEquals(
   response: HttpResponse,
   headerKey: string,
-  val: string | string[] | undefined
+  val: string | string[] | undefined,
 ): void {
   const headerValue = getHeader(response.headers, headerKey);
   strictEqual(headerValue, val, `response header equals ${val}`);

@@ -6,7 +6,7 @@ import * as parserUtils from './parserUtils';
 
 export async function parseWebsocketLine(
   getLineReader: models.getHttpLineGenerator,
-  context: models.ParserContext
+  context: models.ParserContext,
 ): Promise<models.HttpRegionParserResult> {
   const lineReader = getLineReader();
   const next = lineReader.next();
@@ -43,12 +43,16 @@ export async function parseWebsocketLine(
     const headers = {};
     requestLine.request.headers = headers;
 
-    const headersResult = parserUtils.parseSubsequentLines(lineReader, [
-      parserUtils.parseComments,
-      parserUtils.parseRequestHeaderFactory(headers),
-      parserUtils.parseDefaultHeadersFactory((headers, context) => Object.assign(context.request?.headers, headers)),
-      parserUtils.parseUrlLineFactory(url => (requestLine.request.url += url)),
-    ], context);
+    const headersResult = parserUtils.parseSubsequentLines(
+      lineReader,
+      [
+        parserUtils.parseComments,
+        parserUtils.parseRequestHeaderFactory(headers),
+        parserUtils.parseDefaultHeadersFactory((headers, context) => Object.assign(context.request?.headers, headers)),
+        parserUtils.parseUrlLineFactory(url => (requestLine.request.url += url)),
+      ],
+      context,
+    );
 
     if (headersResult) {
       result.nextParserLine = headersResult.nextLine || result.nextParserLine;
@@ -57,8 +61,7 @@ export async function parseWebsocketLine(
       }
     }
 
-    context.httpRegion.hooks.execute.addObjHook(obj => obj.process,
-      new actions.WebSocketClientAction());
+    context.httpRegion.hooks.execute.addObjHook(obj => obj.process, new actions.WebSocketClientAction());
 
     context.httpRegion.hooks.execute.addInterceptor(new actions.CreateRequestInterceptor());
 
@@ -69,14 +72,14 @@ export async function parseWebsocketLine(
 
 function getWebsocketLine(
   textLine: string,
-  line: number
-): { request: models.WebsocketRequest, symbol: models.HttpSymbol } | undefined {
+  line: number,
+): { request: models.WebsocketRequest; symbol: models.HttpSymbol } | undefined {
   const lineMatch = ParserRegex.stream.websocketLine.exec(textLine);
   if (lineMatch && lineMatch.length > 1 && lineMatch.groups) {
     return {
       request: {
         url: lineMatch.groups.url,
-        method: 'WS'
+        method: 'WS',
       },
       symbol: {
         name: lineMatch.groups.url,
@@ -86,7 +89,7 @@ function getWebsocketLine(
         startOffset: 0,
         endLine: line,
         endOffset: textLine.length,
-      }
+      },
     };
   }
   const protocolMatch = ParserRegex.stream.websocketProtocol.exec(textLine);
@@ -94,7 +97,7 @@ function getWebsocketLine(
     return {
       request: {
         url: protocolMatch.groups.url,
-        method: 'WS'
+        method: 'WS',
       },
       symbol: {
         name: protocolMatch.groups.url,
@@ -104,7 +107,7 @@ function getWebsocketLine(
         startOffset: 0,
         endLine: line,
         endOffset: textLine.length,
-      }
+      },
     };
   }
   return undefined;

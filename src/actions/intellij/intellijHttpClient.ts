@@ -12,7 +12,7 @@ export class IntellijHttpClient implements JetbrainsHttpClient {
   test(testName: string, func: () => void): void {
     testFactory(this.context)(testName, func);
   }
-  assert(condition: boolean, message?: string) : void {
+  assert(condition: boolean, message?: string): void {
     ok(condition, message);
   }
   log(text: string): void {

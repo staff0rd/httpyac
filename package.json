@@ -37,6 +37,7 @@
 		"httpyac": "./bin/httpyac.js"
 	},
 	"scripts": {
+		"format": "prettier --write --parser typescript \"src/**/*.ts?(x)\"",
 		"prepack": "npm run compile",
 		"esbuild": "node ./buildSrc/esbuild.js",
 		"tsc": "tsc --declaration --emitDeclarationOnly",
@@ -50,7 +51,13 @@
 		"prepare": "husky install"
 	},
 	"lint-staged": {
-		"*.ts": "eslint --cache --fix"
+		"*.js": [
+			"prettier --write"
+		],
+		"*.ts?(x)": [
+			"eslint --cache --fix",
+			"prettier --parser=typescript --write"
+		]
 	},
 	"devDependencies": {
 		"@types/aws4": "^1.11.0",
@@ -94,6 +101,7 @@
 		"lodash": "^4.17.21",
 		"mqtt": "^4.2.8",
 		"open": "8.4.0",
+		"prettier": "^2.4.1",
 		"tough-cookie": "^4.0.0",
 		"uuid": "^8.3.2",
 		"ws": "^8.2.3",

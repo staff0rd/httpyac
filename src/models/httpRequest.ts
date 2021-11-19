@@ -4,7 +4,7 @@ import { OptionsOfUnknownResponseBody } from 'got';
 import { ClientOptions as WebsocketOptions } from 'ws';
 import { IClientOptions as MQTTOptions } from 'mqtt';
 export interface HeadersContainer {
-  headers: Record<string, unknown>
+  headers: Record<string, unknown>;
 }
 
 export type Request = GrpcRequest | HttpRequest | WebsocketRequest | EventSourceRequest | MQTTRequest;
@@ -42,13 +42,13 @@ export interface EventSourceRequest {
   contentType?: undefined;
 }
 
-export interface HttpRequest extends Omit<OptionsOfUnknownResponseBody, 'body'>{
+export interface HttpRequest extends Omit<OptionsOfUnknownResponseBody, 'body'> {
   url?: string;
   method?: HttpMethod;
   headers?: Record<string, string | string[] | undefined>;
   contentType?: ContentType;
   body?: string | Array<HttpRequestBodyLine> | Buffer;
-  rawBody?: Array<string | RequestBodyImport>,
+  rawBody?: Array<string | RequestBodyImport>;
   proxy?: string;
 }
 
@@ -57,5 +57,5 @@ export type HttpRequestBodyLine = string | (() => Promise<Buffer>);
 export interface RequestBodyImport {
   fileName: string;
   injectVariables: boolean;
-  encoding: BufferEncoding
+  encoding: BufferEncoding;
 }

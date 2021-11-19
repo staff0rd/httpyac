@@ -5,11 +5,7 @@ import { ParserRegex } from '../../parser';
 import { log } from '../../io';
 import * as utils from '../../utils';
 
-export async function oauth2VariableReplacer(
-  text: unknown,
-  type: string,
-  context: ProcessorContext
-): Promise<unknown> {
+export async function oauth2VariableReplacer(text: unknown, type: string, context: ProcessorContext): Promise<unknown> {
   if (type.toLowerCase() === 'authorization' && utils.isString(text)) {
     const match = ParserRegex.auth.oauth2.exec(text);
     if (match && match.groups) {
@@ -34,7 +30,7 @@ export async function oauth2VariableReplacer(
               openIdInformation = await oauth.TokenExchangeFlow.perform(
                 tokenExchangeConfig,
                 openIdInformation,
-                context
+                context,
               );
             }
           }
@@ -55,7 +51,7 @@ export async function oauth2VariableReplacer(
 
 function getSessionOpenIdInformation(
   cacheKey: string,
-  config: oauth.OpenIdConfiguration
+  config: oauth.OpenIdConfiguration,
 ): oauth.OpenIdInformation | false {
   const openIdInformation = userSessionStore.userSessions.find(obj => obj.id === cacheKey);
   if (isOpenIdInformation(openIdInformation) && JSON.stringify(openIdInformation.config) === JSON.stringify(config)) {
@@ -75,7 +71,7 @@ function getOpenIdFlow(flowType: string) {
     oauth.clientCredentialsFlow,
     oauth.deviceCodeFlow,
     oauth.passwordFlow,
-    oauth.implicitFlow
+    oauth.implicitFlow,
   ];
   return openIdFlows.find(flow => flow.supportsFlow(flowType));
 }

@@ -5,14 +5,14 @@ import * as io from '../io';
 import { toEnvironmentKey } from './environmentUtils';
 import { log } from '../io';
 
-export function expandVariables(variables: models.Variables) : models.Variables {
+export function expandVariables(variables: models.Variables): models.Variables {
   for (const [key, value] of Object.entries(variables)) {
     expandVariable(key, value, variables);
   }
   return variables;
 }
 
-export function expandVariable(key: string, value: unknown, variables: models.Variables) : unknown {
+export function expandVariable(key: string, value: unknown, variables: models.Variables): unknown {
   if (value && isString(value)) {
     let result = value;
     let match: RegExpExecArray | null;
@@ -32,7 +32,7 @@ export function expandVariable(key: string, value: unknown, variables: models.Va
 export async function replaceVariables(
   text: unknown,
   type: models.VariableType | string,
-  context: models.ProcessorContext
+  context: models.ProcessorContext,
 ): Promise<typeof models.HookCancel | unknown> {
   if (context.progress?.isCanceled?.()) {
     log.trace('processs canceled by user');
@@ -42,9 +42,9 @@ export async function replaceVariables(
 }
 
 export async function replaceFilePath<T>(
-  fileName: string, context:
-    models.ProcessorContext,
-  action: (path: models.PathLike) => Promise<T>
+  fileName: string,
+  context: models.ProcessorContext,
+  action: (path: models.PathLike) => Promise<T>,
 ): Promise<T | undefined> {
   const file = await replaceVariables(fileName, models.VariableType.filePath, context);
   if (isString(file)) {
@@ -55,7 +55,6 @@ export async function replaceFilePath<T>(
     const message = `file not found: ${fileName}`;
     io.userInteractionProvider.showWarnMessage?.(message);
     io.log.warn(message);
-
   } else {
     const message = `file replace made file invalid: ${fileName} <> ${file}`;
     io.userInteractionProvider.showWarnMessage?.(message);

@@ -19,24 +19,28 @@ class ClientCredentialsFlow implements OpenIdFlow {
     const id = this.getCacheKey(config);
     if (id) {
       utils.report(context, 'execute OAuth2 client_credentials flow');
-      return requestOpenIdInformation({
-        url: config.tokenEndpoint,
-        method: 'POST',
-        body: utils.toQueryParams({
-          grant_type: 'client_credentials',
-          scope: config.scope,
-        })
-      }, {
-        config,
-        id,
-        title: `clientCredentials: ${config.clientId}`,
-        description: `${config.variablePrefix} - ${config.tokenEndpoint}`,
-        details: {
-          clientId: config.clientId,
-          tokenEndpoint: config.tokenEndpoint,
-          grantType: 'client_credentials',
-        }
-      }, context);
+      return requestOpenIdInformation(
+        {
+          url: config.tokenEndpoint,
+          method: 'POST',
+          body: utils.toQueryParams({
+            grant_type: 'client_credentials',
+            scope: config.scope,
+          }),
+        },
+        {
+          config,
+          id,
+          title: `clientCredentials: ${config.clientId}`,
+          description: `${config.variablePrefix} - ${config.tokenEndpoint}`,
+          details: {
+            clientId: config.clientId,
+            tokenEndpoint: config.tokenEndpoint,
+            grantType: 'client_credentials',
+          },
+        },
+        context,
+      );
     }
     return false;
   }

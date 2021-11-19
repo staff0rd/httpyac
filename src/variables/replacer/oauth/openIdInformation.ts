@@ -3,7 +3,7 @@ import * as models from '../../../models';
 import * as utils from '../../../utils';
 import { log } from '../../../io';
 
-export interface OpenIdInformation extends models.UserSession{
+export interface OpenIdInformation extends models.UserSession {
   time: number;
   config: OpenIdConfiguration;
   accessToken: string;
@@ -13,18 +13,18 @@ export interface OpenIdInformation extends models.UserSession{
   refreshExpiresIn?: number;
 }
 
-export interface OpenIdContext{
-  httpClient: models.HttpClient,
+export interface OpenIdContext {
+  httpClient: models.HttpClient;
 }
 
-export interface OpenIdSesssion extends Omit<models.UserSession, 'type'>{
-  config: OpenIdConfiguration,
+export interface OpenIdSesssion extends Omit<models.UserSession, 'type'> {
+  config: OpenIdConfiguration;
 }
 
 export async function requestOpenIdInformation(
   request: models.HttpRequest | false,
   options: OpenIdSesssion,
-  context: OpenIdContext
+  context: OpenIdContext,
 ): Promise<OpenIdInformation | false> {
   if (request) {
     const time = new Date().getTime();
@@ -36,11 +36,13 @@ export async function requestOpenIdInformation(
     }
 
     if (request.headers && options.config.useAuthorizationHeader) {
-      request.headers.authorization = `Basic ${Buffer.from(`${options.config.clientId}:${options.config.clientSecret}`).toString('base64')}`;
+      request.headers.authorization = `Basic ${Buffer.from(
+        `${options.config.clientId}:${options.config.clientSecret}`,
+      ).toString('base64')}`;
     } else {
       request.body = `${request.body}&${utils.toQueryParams({
         client_id: options.config.clientId,
-        client_secret: options.config.clientSecret
+        client_secret: options.config.clientSecret,
       })}`;
     }
 
@@ -60,7 +62,7 @@ export async function requestOpenIdInformation(
 export function toOpenIdInformation(
   jwtToken: unknown,
   time: number,
-  session: OpenIdSesssion
+  session: OpenIdSesssion,
 ): OpenIdInformation | false {
   if (isAuthToken(jwtToken)) {
     const parsedToken = utils.decodeJWT(jwtToken.access_token);

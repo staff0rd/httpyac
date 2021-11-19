@@ -14,7 +14,6 @@ export async function showQuickpickVariableReplacer(text: unknown): Promise<unkn
 
     const matchInput = /^\$pick\s*(?<placeholder>[^$]*)(\$value:\s*(?<value>.*))\s*$/u.exec(variable);
     if (matchInput?.groups?.placeholder && matchInput?.groups?.value) {
-
       const placeholder = matchInput.groups.placeholder;
       const value = matchInput.groups.value;
 

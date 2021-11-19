@@ -16,12 +16,11 @@ export async function showInputBoxVariableReplacer(text: unknown): Promise<unkno
 
     const matchInput = /^\$input\s*(?<placeholder>[^$]*)(\$value:\s*(?<value>.*))?\s*$/u.exec(variable);
     if (matchInput?.groups?.placeholder) {
-
       const placeholder = matchInput.groups.placeholder;
 
       const answer = await userInteractionProvider.showInputPrompt(
         placeholder,
-        lastValue[placeholder] || matchInput.groups.value
+        lastValue[placeholder] || matchInput.groups.value,
       );
 
       if (answer) {

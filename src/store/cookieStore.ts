@@ -15,7 +15,7 @@ class CookieStore {
     return `Cookies_${toEnvironmentKey(httpFile.activeEnvironment)}_${httpFile.rootDir?.toString?.() || 'none'}`;
   }
 
-  getCookieStoreEntry(httpFile: models.HttpFile) : CookieStoreEntry {
+  getCookieStoreEntry(httpFile: models.HttpFile): CookieStoreEntry {
     const id = this.getCookieStoreId(httpFile);
     let result = this.storeCache.find(obj => obj.id === id);
     if (!result) {
@@ -62,7 +62,6 @@ class CookieStore {
         });
       }
     }
-
   }
 }
 

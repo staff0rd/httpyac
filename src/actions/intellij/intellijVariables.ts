@@ -5,10 +5,7 @@ import { intellijVariableCache } from '../../variables/provider';
 import { toEnvironmentKey } from '../../utils';
 
 export class IntellijVariables implements JetbrainsVariables {
-  constructor(
-    private readonly variables: Variables,
-    private readonly env: string[] | undefined
-  ) { }
+  constructor(private readonly variables: Variables, private readonly env: string[] | undefined) {}
 
   private get globalCache() {
     return intellijVariableCache[toEnvironmentKey(this.env)];

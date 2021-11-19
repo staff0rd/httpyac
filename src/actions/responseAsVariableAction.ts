@@ -4,7 +4,7 @@ import * as utils from '../utils';
 
 export async function responseAsVariable(
   response: models.HttpResponse,
-  context: models.ProcessorContext
+  context: models.ProcessorContext,
 ): Promise<models.HttpResponse> {
   const body = response.parsedBody || response.body;
   context.variables.response = response;
@@ -30,7 +30,6 @@ function handleNameMetaData(body: unknown, context: models.ProcessorContext) {
       log.warn(message);
     }
   }
-
 }
 
 function handleJWTMetaData(body: unknown, { httpRegion }: models.ProcessorContext) {
@@ -56,7 +55,7 @@ function handleJWTMetaData(body: unknown, { httpRegion }: models.ProcessorContex
   }
 }
 
-function parseJwtToken(value: unknown) : utils.JWTToken | null {
+function parseJwtToken(value: unknown): utils.JWTToken | null {
   if (utils.isString(value)) {
     try {
       return utils.decodeJWT(value);

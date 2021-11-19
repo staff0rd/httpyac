@@ -7,7 +7,7 @@ export async function injectNote({ httpRegion }: ParserContext): Promise<void> {
     const note = httpRegion.metaData.note || `Are you sure you want to send the request ${getDisplayName(httpRegion)}?`;
 
     httpRegion.hooks.execute.addInterceptor({
-      beforeLoop: () => userInteractionProvider.showNote(note)
+      beforeLoop: () => userInteractionProvider.showNote(note),
     });
   }
 }

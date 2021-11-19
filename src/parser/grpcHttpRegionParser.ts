@@ -6,7 +6,7 @@ import * as parserUtils from './parserUtils';
 
 export async function parseGrpcLine(
   getLineReader: models.getHttpLineGenerator,
-  context: models.ParserContext
+  context: models.ParserContext,
 ): Promise<models.HttpRegionParserResult> {
   const lineReader = getLineReader();
   const next = lineReader.next();
@@ -43,12 +43,16 @@ export async function parseGrpcLine(
     const headers = {};
     grpcLine.request.headers = headers;
 
-    const headersResult = parserUtils.parseSubsequentLines(lineReader, [
-      parserUtils.parseComments,
-      parserUtils.parseRequestHeaderFactory(headers),
-      parserUtils.parseDefaultHeadersFactory((headers, context) => Object.assign(context.request?.headers, headers)),
-      parserUtils.parseUrlLineFactory(url => (grpcLine.request.url += url)),
-    ], context);
+    const headersResult = parserUtils.parseSubsequentLines(
+      lineReader,
+      [
+        parserUtils.parseComments,
+        parserUtils.parseRequestHeaderFactory(headers),
+        parserUtils.parseDefaultHeadersFactory((headers, context) => Object.assign(context.request?.headers, headers)),
+        parserUtils.parseUrlLineFactory(url => (grpcLine.request.url += url)),
+      ],
+      context,
+    );
 
     if (headersResult) {
       result.nextParserLine = headersResult.nextLine || result.nextParserLine;
@@ -57,8 +61,7 @@ export async function parseGrpcLine(
       }
     }
 
-    context.httpRegion.hooks.execute.addObjHook(obj => obj.process,
-      new actions.GrpcClientAction());
+    context.httpRegion.hooks.execute.addObjHook(obj => obj.process, new actions.GrpcClientAction());
 
     context.httpRegion.hooks.execute.addInterceptor(new actions.CreateRequestInterceptor());
 
@@ -69,14 +72,14 @@ export async function parseGrpcLine(
 
 function getGrpcLine(
   textLine: string,
-  line: number
-): { request: models.GrpcRequest, symbol: models.HttpSymbol } | undefined {
+  line: number,
+): { request: models.GrpcRequest; symbol: models.HttpSymbol } | undefined {
   const lineMatch = ParserRegex.grpc.grpcLine.exec(textLine);
   if (lineMatch && lineMatch.length > 1 && lineMatch.groups) {
     return {
       request: {
         url: lineMatch.groups.url,
-        method: 'GRPC'
+        method: 'GRPC',
       },
       symbol: {
         name: lineMatch.groups.url,
@@ -86,7 +89,7 @@ function getGrpcLine(
         startOffset: 0,
         endLine: line,
         endOffset: textLine.length,
-      }
+      },
     };
   }
   const protocolMatch = ParserRegex.grpc.grpcProtocol.exec(textLine);
@@ -94,7 +97,7 @@ function getGrpcLine(
     return {
       request: {
         url: protocolMatch.groups.url,
-        method: 'GRPC'
+        method: 'GRPC',
       },
       symbol: {
         name: protocolMatch.groups.url,
@@ -104,7 +107,7 @@ function getGrpcLine(
         startOffset: 0,
         endLine: line,
         endOffset: textLine.length,
-      }
+      },
     };
   }
   return undefined;

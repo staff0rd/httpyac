@@ -6,7 +6,7 @@ import * as parserUtils from './parserUtils';
 
 export async function parseEventSource(
   getLineReader: models.getHttpLineGenerator,
-  context: models.ParserContext
+  context: models.ParserContext,
 ): Promise<models.HttpRegionParserResult> {
   const lineReader = getLineReader();
   const next = lineReader.next();
@@ -43,12 +43,16 @@ export async function parseEventSource(
     const headers = {};
     eventSourceLine.request.headers = headers;
 
-    const headersResult = parserUtils.parseSubsequentLines(lineReader, [
-      parserUtils.parseComments,
-      parserUtils.parseRequestHeaderFactory(headers),
-      parserUtils.parseDefaultHeadersFactory((headers, context) => Object.assign(context.request?.headers, headers)),
-      parserUtils.parseUrlLineFactory(url => (eventSourceLine.request.url += url)),
-    ], context);
+    const headersResult = parserUtils.parseSubsequentLines(
+      lineReader,
+      [
+        parserUtils.parseComments,
+        parserUtils.parseRequestHeaderFactory(headers),
+        parserUtils.parseDefaultHeadersFactory((headers, context) => Object.assign(context.request?.headers, headers)),
+        parserUtils.parseUrlLineFactory(url => (eventSourceLine.request.url += url)),
+      ],
+      context,
+    );
 
     if (headersResult) {
       result.nextParserLine = headersResult.nextLine || result.nextParserLine;
@@ -57,8 +61,7 @@ export async function parseEventSource(
       }
     }
 
-    context.httpRegion.hooks.execute.addObjHook(obj => obj.process,
-      new actions.EventSourceClientAction());
+    context.httpRegion.hooks.execute.addObjHook(obj => obj.process, new actions.EventSourceClientAction());
 
     context.httpRegion.hooks.execute.addInterceptor(new actions.CreateRequestInterceptor());
 
@@ -69,14 +72,14 @@ export async function parseEventSource(
 
 function getEventSourceLine(
   textLine: string,
-  line: number
-): { request: models.EventSourceRequest, symbol: models.HttpSymbol } | undefined {
+  line: number,
+): { request: models.EventSourceRequest; symbol: models.HttpSymbol } | undefined {
   const lineMatch = ParserRegex.stream.eventSourceLine.exec(textLine);
   if (lineMatch && lineMatch.length > 1 && lineMatch.groups) {
     return {
       request: {
         url: lineMatch.groups.url,
-        method: 'SSE'
+        method: 'SSE',
       },
       symbol: {
         name: lineMatch.groups.url,
@@ -86,7 +89,7 @@ function getEventSourceLine(
         startOffset: 0,
         endLine: line,
         endOffset: textLine.length,
-      }
+      },
     };
   }
   return undefined;
