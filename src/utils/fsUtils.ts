@@ -2,10 +2,12 @@ import { fileProvider } from '../io';
 import { PathLike } from '../models';
 import { isString } from './stringUtils';
 
-
-export async function toAbsoluteFilename(fileName: PathLike | undefined, baseName: PathLike | undefined): Promise<PathLike | undefined> {
+export async function toAbsoluteFilename(
+  fileName: PathLike | undefined,
+  baseName: PathLike | undefined
+): Promise<PathLike | undefined> {
   if (fileName) {
-    if (await fileProvider.isAbsolute(fileName) && await fileProvider.exists(fileName)) {
+    if ((await fileProvider.isAbsolute(fileName)) && (await fileProvider.exists(fileName))) {
       return fileName;
     }
     if (baseName && isString(fileName)) {
@@ -29,9 +31,11 @@ export function extensionName(fileName: PathLike) {
 
 export function replaceInvalidChars(fileName: string): string {
   const result = fileName.replace(/[/\\?%*:|"<>]/gu, '_');
-  return result.split('_').filter(obj => obj.length > 0).join('_');
+  return result
+    .split('_')
+    .filter(obj => obj.length > 0)
+    .join('_');
 }
-
 
 export function shortenFileName(fileName: string, maxChars = 50): string {
   const result: Array<string> = [];
@@ -40,7 +44,7 @@ export function shortenFileName(fileName: string, maxChars = 50): string {
   for (const item of fileName.split('_').reverse()) {
     if (item.length + charLength < maxChars) {
       result.push(item);
-      charLength += (item.length + 1);
+      charLength += item.length + 1;
     } else if (result.length === 0) {
       result.push(item);
     }
@@ -49,8 +53,11 @@ export function shortenFileName(fileName: string, maxChars = 50): string {
   return joinedString.slice(Math.max(joinedString.length - maxChars, 0));
 }
 
-
-export async function findRootDirOfFile(filename: PathLike, workingDir?: PathLike, ...files: Array<string>): Promise<PathLike | undefined> {
+export async function findRootDirOfFile(
+  filename: PathLike,
+  workingDir?: PathLike,
+  ...files: Array<string>
+): Promise<PathLike | undefined> {
   let file = filename;
   if (!(await fileProvider.isAbsolute(filename)) && workingDir) {
     file = fileProvider.joinPath(workingDir, fileProvider.fsPath(filename));
@@ -63,7 +70,10 @@ export async function findRootDirOfFile(filename: PathLike, workingDir?: PathLik
   return dir || workingDir;
 }
 
-export async function findRootDir(currentDir: PathLike | undefined, ...files: Array<string>): Promise<PathLike | undefined> {
+export async function findRootDir(
+  currentDir: PathLike | undefined,
+  ...files: Array<string>
+): Promise<PathLike | undefined> {
   if (currentDir) {
     const dirFiles = await fileProvider.readdir(currentDir);
 

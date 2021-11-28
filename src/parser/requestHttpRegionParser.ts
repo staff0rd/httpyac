@@ -1,6 +1,6 @@
+import * as actions from '../actions';
 import * as models from '../models';
 import * as utils from '../utils';
-import * as actions from '../actions';
 import { ParserRegex } from './parserRegex';
 import * as parserUtils from './parserUtils';
 
@@ -36,20 +36,23 @@ export async function parseRequestLine(
 
     const result: models.HttpRegionParserResult = {
       nextParserLine: next.value.line,
-      symbols
+      symbols,
     };
-
 
     const headers = {};
     request.headers = headers;
 
-    const headersResult = parserUtils.parseSubsequentLines(lineReader, [
-      parserUtils.parseComments,
-      parserUtils.parseRequestHeaderFactory(headers),
-      parserUtils.parseDefaultHeadersFactory((headers, context) => Object.assign(context.request?.headers, headers)),
-      parserUtils.parseQueryLineFactory(url => (request.url += url)),
-      parserUtils.parseUrlLineFactory(url => (request.url += url)),
-    ], context);
+    const headersResult = parserUtils.parseSubsequentLines(
+      lineReader,
+      [
+        parserUtils.parseComments,
+        parserUtils.parseRequestHeaderFactory(headers),
+        parserUtils.parseDefaultHeadersFactory((headers, context) => Object.assign(context.request?.headers, headers)),
+        parserUtils.parseQueryLineFactory(url => (request.url += url)),
+        parserUtils.parseUrlLineFactory(url => (request.url += url)),
+      ],
+      context
+    );
 
     if (headersResult) {
       result.nextParserLine = headersResult.nextLine || result.nextParserLine;
@@ -58,9 +61,11 @@ export async function parseRequestLine(
       }
     }
 
-    context.httpRegion.hooks.execute.addObjHook(obj => obj.process,
+    context.httpRegion.hooks.execute.addObjHook(
+      obj => obj.process,
       new actions.CookieJarAction(),
-      new actions.HttpClientAction());
+      new actions.HttpClientAction()
+    );
 
     context.httpRegion.hooks.execute.addInterceptor(new actions.CreateRequestInterceptor());
 
@@ -75,36 +80,43 @@ export async function parseRequestLine(
   return false;
 }
 
-
-function getRequestLine(textLine: string, line: number): { request: models.HttpRequest, requestSymbols: Array<models.HttpSymbol> } {
+function getRequestLine(
+  textLine: string,
+  line: number
+): { request: models.HttpRequest; requestSymbols: Array<models.HttpSymbol> } {
   const requestSymbols: Array<models.HttpSymbol> = [];
   const requestLineMatch = ParserRegex.request.requestLine.exec(textLine);
   if (requestLineMatch && requestLineMatch.length > 1 && requestLineMatch.groups) {
-    requestSymbols.push({
-      name: requestLineMatch.groups.method,
-      description: 'request method',
-      kind: models.HttpSymbolKind.requestHeader,
-      startLine: line,
-      startOffset: textLine.indexOf(requestLineMatch.groups.method),
-      endLine: line,
-      endOffset: textLine.indexOf(requestLineMatch.groups.method) + requestLineMatch.groups.method.length,
-    }, {
-      name: requestLineMatch.groups.url,
-      description: 'request url',
-      kind: models.HttpSymbolKind.url,
-      startLine: line,
-      startOffset: textLine.indexOf(requestLineMatch.groups.url),
-      endLine: line,
-      endOffset: textLine.length,
-    });
+    requestSymbols.push(
+      {
+        name: requestLineMatch.groups.method,
+        description: 'request method',
+        kind: models.HttpSymbolKind.requestHeader,
+        startLine: line,
+        startOffset: textLine.indexOf(requestLineMatch.groups.method),
+        endLine: line,
+        endOffset: textLine.indexOf(requestLineMatch.groups.method) + requestLineMatch.groups.method.length,
+      },
+      {
+        name: requestLineMatch.groups.url,
+        description: 'request url',
+        kind: models.HttpSymbolKind.url,
+        startLine: line,
+        startOffset: textLine.indexOf(requestLineMatch.groups.url),
+        endLine: line,
+        endOffset: textLine.length,
+      }
+    );
 
     return {
       request: {
         url: requestLineMatch.groups.url,
         method: utils.isHttpRequestMethod(requestLineMatch.groups.method) ? requestLineMatch.groups.method : 'GET',
-        http2: requestLineMatch.groups.version ? ['1.1', '1.0'].indexOf(requestLineMatch.groups.version) < 0 : undefined,
+        http2: requestLineMatch.groups.version
+          ? ['1.1', '1.0'].indexOf(requestLineMatch.groups.version) < 0
+          : undefined,
       },
-      requestSymbols
+      requestSymbols,
     };
   }
   requestSymbols.push({
@@ -121,10 +133,9 @@ function getRequestLine(textLine: string, line: number): { request: models.HttpR
       url: textLine.trim(),
       method: 'GET',
     },
-    requestSymbols
+    requestSymbols,
   };
 }
-
 
 function isValidRequestLine(textLine: string, httpRegion: models.HttpRegion) {
   if (utils.isStringEmpty(textLine)) {

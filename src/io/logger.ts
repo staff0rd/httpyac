@@ -2,13 +2,14 @@ import { LogLevel, LogHandler, ConsoleLogHandler } from '../models';
 
 export class Logger implements ConsoleLogHandler {
   private collectCache: Array<() => void> | undefined;
-  constructor(readonly options: {
-    level?: LogLevel,
-    logMethod?: (level: LogLevel, ...params: unknown[]) => void,
-    onlyFailedTests?: boolean;
-    noTrace?: boolean;
-  }) {
-  }
+  constructor(
+    readonly options: {
+      level?: LogLevel;
+      logMethod?: (level: LogLevel, ...params: unknown[]) => void;
+      onlyFailedTests?: boolean;
+      noTrace?: boolean;
+    }
+  ) {}
 
   collectMessages(): void {
     this.collectCache = [];
@@ -24,8 +25,11 @@ export class Logger implements ConsoleLogHandler {
   }
 
   private writeLog(logLevel: LogLevel, action: (...params: unknown[]) => void, params: unknown[]) {
-    if (!this.options?.level || logLevel >= (this.options.level)) {
-      const log = this.options?.logMethod ? () => this.options?.logMethod?.(logLevel, ...params) : () => action(...params);
+    if (!this.options?.level || logLevel >= this.options.level) {
+      let log = () => action(...params);
+      if (this.options?.logMethod) {
+        log = () => this.options?.logMethod?.(logLevel, ...params);
+      }
       if (this.collectCache) {
         this.collectCache.push(log);
       } else {
@@ -63,7 +67,6 @@ export class Logger implements ConsoleLogHandler {
     console.clear();
   }
 }
-
 
 export const log: LogHandler = new Logger({
   level: LogLevel.warn,

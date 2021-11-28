@@ -1,8 +1,7 @@
 import * as models from '../models';
 import * as utils from '../utils';
 
-
-export enum LoopMetaType{
+export enum LoopMetaType {
   for,
   forOf,
   while,
@@ -16,18 +15,19 @@ export interface LoopMetaData {
   expression?: string;
 }
 
-
 export class LoopMetaAction implements models.HookInterceptor<models.ProcessorContext, boolean> {
   id = models.ActionType.loop;
-  private iteration: AsyncGenerator<{
-    index: number;
-    variables: models.Variables
-  }> | undefined;
+  private iteration:
+    | AsyncGenerator<{
+        index: number;
+        variables: models.Variables;
+      }>
+    | undefined;
 
   name: string | undefined;
-  constructor(private readonly data: LoopMetaData) { }
+  constructor(private readonly data: LoopMetaData) {}
 
-  async beforeLoop(context: models.HookTriggerContext<models.ProcessorContext, boolean>) : Promise<boolean> {
+  async beforeLoop(context: models.HookTriggerContext<models.ProcessorContext, boolean>): Promise<boolean> {
     this.iteration = this.iterate(context.arg);
     this.name = context.arg.httpRegion.metaData.name;
     context.arg.progress?.report?.({
@@ -43,7 +43,6 @@ export class LoopMetaAction implements models.HookInterceptor<models.ProcessorCo
 
   async afterTrigger(context: models.HookTriggerContext<models.ProcessorContext, boolean>): Promise<boolean> {
     if (this.iteration && context.index + 1 === context.length) {
-
       const next = await this.iteration.next();
 
       if (!next.done) {
@@ -74,12 +73,12 @@ export class LoopMetaAction implements models.HookInterceptor<models.ProcessorCo
             let index = 0;
             for (const variable of iterable) {
               const variables: models.Variables = {
-                '$index': index,
+                $index: index,
               };
               variables[this.data.variable] = variable;
               yield {
                 index,
-                variables
+                variables,
               };
               index++;
             }
@@ -92,8 +91,8 @@ export class LoopMetaAction implements models.HookInterceptor<models.ProcessorCo
             yield {
               index,
               variables: {
-                '$index': index,
-              }
+                $index: index,
+              },
             };
           }
         }
@@ -105,8 +104,8 @@ export class LoopMetaAction implements models.HookInterceptor<models.ProcessorCo
             yield {
               index,
               variables: {
-                '$index': index,
-              }
+                $index: index,
+              },
             };
             index++;
           }
@@ -117,16 +116,17 @@ export class LoopMetaAction implements models.HookInterceptor<models.ProcessorCo
     }
   }
 
-
   private createHttpRegionClone(httpRegion: models.HttpRegion, index: number): models.HttpRegion {
     return {
       metaData: {
         ...httpRegion.metaData,
-        name: this.name ? `${this.name}${index}` : undefined
+        name: this.name ? `${this.name}${index}` : undefined,
       },
-      request: httpRegion.request ? {
-        ...httpRegion.request
-      } : undefined,
+      request: httpRegion.request
+        ? {
+            ...httpRegion.request,
+          }
+        : undefined,
       symbol: httpRegion.symbol,
       hooks: {
         execute: new models.ExecuteHook(),

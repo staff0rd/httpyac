@@ -1,18 +1,16 @@
+import { fileProvider, log, userInteractionProvider } from '../io';
 import * as models from '../models';
+import * as utils from '../utils';
 import { ParserRegex } from './parserRegex';
 import * as parserUtils from './parserUtils';
-import { load } from '@grpc/proto-loader';
-import * as utils from '../utils';
-import { fileProvider, log, userInteractionProvider } from '../io';
 import { loadPackageDefinition } from '@grpc/grpc-js';
+import { load } from '@grpc/proto-loader';
 
-
-export interface ProtoProcessorContext extends models.ProcessorContext{
+export interface ProtoProcessorContext extends models.ProcessorContext {
   options: {
-    protoDefinitions?: Record<string, models.ProtoDefinition>
-  }
+    protoDefinitions?: Record<string, models.ProtoDefinition>;
+  };
 }
-
 
 export async function parseProtoImport(
   getLineReader: models.getHttpLineGenerator,
@@ -21,7 +19,6 @@ export async function parseProtoImport(
   const lineReader = getLineReader();
   const next = lineReader.next();
   if (!next.done) {
-
     const matchProto = ParserRegex.grpc.proto.exec(next.value.textLine);
 
     if (matchProto?.groups?.fileName) {
@@ -40,16 +37,20 @@ export async function parseProtoImport(
 
       const result: models.HttpRegionParserResult = {
         nextParserLine: next.value.line,
-        symbols
+        symbols,
       };
 
-      const headersResult = parserUtils.parseSubsequentLines(lineReader, [
-        parserUtils.parseComments,
-        parserUtils.parseRequestHeaderFactory(protoDefinition.loaderOptions),
-        parserUtils.parseDefaultHeadersFactory(
-          (headers, context: ProtoProcessorContext) => Object.assign(context.options.protoDefinitions?.[protoDefinition.fileName].loaderOptions, headers)
-        ),
-      ], context);
+      const headersResult = parserUtils.parseSubsequentLines(
+        lineReader,
+        [
+          parserUtils.parseComments,
+          parserUtils.parseRequestHeaderFactory(protoDefinition.loaderOptions),
+          parserUtils.parseDefaultHeadersFactory((headers, context: ProtoProcessorContext) =>
+            Object.assign(context.options.protoDefinitions?.[protoDefinition.fileName].loaderOptions, headers)
+          ),
+        ],
+        context
+      );
 
       if (headersResult) {
         result.nextParserLine = headersResult.nextLine || result.nextParserLine;
@@ -58,8 +59,7 @@ export async function parseProtoImport(
         }
       }
 
-      context.httpRegion.hooks.execute.addObjHook(obj => obj.process,
-        new ProtoImportAction(protoDefinition));
+      context.httpRegion.hooks.execute.addObjHook(obj => obj.process, new ProtoImportAction(protoDefinition));
 
       context.httpRegion.hooks.execute.addInterceptor(new ProtoDefinitionCreationInterceptor(protoDefinition));
       return result;
@@ -67,7 +67,6 @@ export async function parseProtoImport(
   }
   return false;
 }
-
 
 export class ProtoImportAction implements models.HttpRegionAction {
   id = models.ActionType.protoImport;
@@ -110,20 +109,23 @@ export class ProtoImportAction implements models.HttpRegionAction {
   }
 }
 
+type ExecuteInterceptor = models.HookInterceptor<models.ProcessorContext, boolean | void>;
 
-export class ProtoDefinitionCreationInterceptor implements models.HookInterceptor<models.ProcessorContext, boolean | void> {
+export class ProtoDefinitionCreationInterceptor implements ExecuteInterceptor {
   id = models.ActionType.protoCreate;
 
-  constructor(private readonly protoDefinition: models.ProtoDefinition) { }
+  constructor(private readonly protoDefinition: models.ProtoDefinition) {}
 
-  async beforeLoop(context: models.HookTriggerContext<ProtoProcessorContext, boolean | undefined>): Promise<boolean | undefined> {
+  async beforeLoop(
+    context: models.HookTriggerContext<ProtoProcessorContext, boolean | undefined>
+  ): Promise<boolean | undefined> {
     context.arg.options.protoDefinitions = Object.assign({}, context.arg.options.protoDefinitions, {
       [this.protoDefinition.fileName]: {
         fileName: this.protoDefinition.fileName,
         loaderOptions: {
-          ...this.protoDefinition.loaderOptions
-        }
-      }
+          ...this.protoDefinition.loaderOptions,
+        },
+      },
     });
 
     return true;

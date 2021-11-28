@@ -1,10 +1,9 @@
-import { ProcessorContext, HttpClient, UserSession, HookCancel } from '../../models';
-import { userSessionStore } from '../../store';
-import * as oauth from './oauth';
-import { ParserRegex } from '../../parser';
 import { log } from '../../io';
+import { ProcessorContext, HttpClient, UserSession, HookCancel } from '../../models';
+import { ParserRegex } from '../../parser';
+import { userSessionStore } from '../../store';
 import * as utils from '../../utils';
-
+import * as oauth from './oauth';
 
 export async function oauth2VariableReplacer(text: unknown, type: string, context: ProcessorContext): Promise<unknown> {
   if (type.toLowerCase() === 'authorization' && utils.isString(text)) {
@@ -28,7 +27,11 @@ export async function oauth2VariableReplacer(text: unknown, type: string, contex
             log.trace(`openid flow ${flow} used: ${cacheKey}`);
             openIdInformation = await openIdFlow.perform(config, context);
             if (openIdInformation && tokenExchangeConfig) {
-              openIdInformation = await oauth.TokenExchangeFlow.perform(tokenExchangeConfig, openIdInformation, context);
+              openIdInformation = await oauth.TokenExchangeFlow.perform(
+                tokenExchangeConfig,
+                openIdInformation,
+                context
+              );
             }
           }
           if (openIdInformation) {
@@ -46,7 +49,10 @@ export async function oauth2VariableReplacer(text: unknown, type: string, contex
   return text;
 }
 
-function getSessionOpenIdInformation(cacheKey: string, config: oauth.OpenIdConfiguration): oauth.OpenIdInformation | false {
+function getSessionOpenIdInformation(
+  cacheKey: string,
+  config: oauth.OpenIdConfiguration
+): oauth.OpenIdInformation | false {
   const openIdInformation = userSessionStore.userSessions.find(obj => obj.id === cacheKey);
   if (isOpenIdInformation(openIdInformation) && JSON.stringify(openIdInformation.config) === JSON.stringify(config)) {
     return openIdInformation;
@@ -65,7 +71,7 @@ function getOpenIdFlow(flowType: string) {
     oauth.clientCredentialsFlow,
     oauth.deviceCodeFlow,
     oauth.passwordFlow,
-    oauth.implicitFlow
+    oauth.implicitFlow,
   ];
   return openIdFlows.find(flow => flow.supportsFlow(flowType));
 }

@@ -1,8 +1,7 @@
+import * as io from '../io';
 import * as models from '../models';
 import * as utils from '../utils';
 import EventSource from 'eventsource';
-import * as io from '../io';
-
 
 export class EventSourceClientAction implements models.HttpRegionAction {
   id = models.ActionType.eventSourceClient;
@@ -40,7 +39,7 @@ export class EventSourceClientAction implements models.HttpRegionAction {
     options.headers = headers;
 
     const responseTemplate: Partial<models.HttpResponse> = {
-      request
+      request,
     };
     const eventStream: { [key: string]: Array<unknown> } = {};
     const loadingPromises: Array<Promise<unknown>> = [];
@@ -56,7 +55,6 @@ export class EventSourceClientAction implements models.HttpRegionAction {
       client.addEventListener('open', evt => {
         io.log.debug('SSE open', evt);
       });
-
 
       for (const eventType of events) {
         client.addEventListener(eventType, evt => {
@@ -92,19 +90,21 @@ export class EventSourceClientAction implements models.HttpRegionAction {
     }
   }
 
-  private isEventType(evt: unknown) : evt is {type: string} {
+  private isEventType(evt: unknown): evt is { type: string } {
     const data = evt as { type: string };
     return !!data?.type;
   }
 
-  private toMergedHttpResponse(data: Record<string, Array<unknown>>, responseTemplate: Partial<models.HttpResponse>): models.HttpResponse {
+  private toMergedHttpResponse(
+    data: Record<string, Array<unknown>>,
+    responseTemplate: Partial<models.HttpResponse>
+  ): models.HttpResponse {
     const response = this.toHttpResponse(data, responseTemplate);
     if (data.error) {
       response.statusCode = -1;
     }
     return response;
   }
-
 
   private toHttpResponse(data: unknown, responseTemplate: Partial<models.HttpResponse>): models.HttpResponse {
     const body = JSON.stringify(data, null, 2);
@@ -121,7 +121,7 @@ export class EventSourceClientAction implements models.HttpRegionAction {
       contentType: {
         mimeType: 'application/json',
         charset: 'UTF-8',
-        contentType: 'application/json; charset=utf-8'
+        contentType: 'application/json; charset=utf-8',
       },
     };
     if (this.isEventType(data) && data.type === 'error') {
@@ -136,7 +136,7 @@ export class EventSourceClientAction implements models.HttpRegionAction {
   }
 }
 
-interface EventSourceMessageEvent{
+interface EventSourceMessageEvent {
   type: string;
   data: unknown;
 }

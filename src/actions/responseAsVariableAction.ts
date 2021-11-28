@@ -2,8 +2,10 @@ import { log, userInteractionProvider } from '../io';
 import * as models from '../models';
 import * as utils from '../utils';
 
-
-export async function responseAsVariable(response: models.HttpResponse, context: models.ProcessorContext): Promise<models.HttpResponse> {
+export async function responseAsVariable(
+  response: models.HttpResponse,
+  context: models.ProcessorContext
+): Promise<models.HttpResponse> {
   const body = response.parsedBody || response.body;
   context.variables.response = response;
   if (context.httpRegion.metaData.name || context.httpRegion.metaData.jwt) {
@@ -28,7 +30,6 @@ function handleNameMetaData(body: unknown, context: models.ProcessorContext) {
       log.warn(message);
     }
   }
-
 }
 
 function handleJWTMetaData(body: unknown, { httpRegion }: models.ProcessorContext) {
@@ -48,13 +49,13 @@ function handleJWTMetaData(body: unknown, { httpRegion }: models.ProcessorContex
         }
       }
       httpRegion.response.parsedBody = Object.fromEntries(entries);
-      httpRegion.response.prettyPrintBody = httpRegion.response.body = JSON.stringify(httpRegion.response.parsedBody, null, 2);
+      httpRegion.response.prettyPrintBody = JSON.stringify(httpRegion.response.parsedBody, null, 2);
+      httpRegion.response.body = httpRegion.response.prettyPrintBody;
     }
   }
 }
 
-
-function parseJwtToken(value: unknown) : utils.JWTToken | null {
+function parseJwtToken(value: unknown): utils.JWTToken | null {
   if (utils.isString(value)) {
     try {
       return utils.decodeJWT(value);

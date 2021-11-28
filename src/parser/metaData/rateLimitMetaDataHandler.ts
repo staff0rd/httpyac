@@ -1,10 +1,14 @@
+import { log } from '../../io';
 import * as models from '../../models';
-import { ParserRegex } from '../parserRegex';
 import { userSessionStore } from '../../store';
 import * as utils from '../../utils';
-import { log } from '../../io';
+import { ParserRegex } from '../parserRegex';
 
-export function rateLimitMetaDataHandler(type: string, value: string | undefined, { httpRegion }: models.ParserContext) {
+export function rateLimitMetaDataHandler(
+  type: string,
+  value: string | undefined,
+  { httpRegion }: models.ParserContext
+) {
   if (type === 'ratelimit' && value) {
     const match = ParserRegex.meta.rateLimit.exec(value);
     if (match?.groups) {
@@ -14,10 +18,12 @@ export function rateLimitMetaDataHandler(type: string, value: string | undefined
       const expire = match.groups.expire || '0';
 
       httpRegion.hooks.execute.addHook('rateLimit', async context => {
-        const rateLimitSession = getRateLimitSession(slot,
+        const rateLimitSession = getRateLimitSession(
+          slot,
           Number.parseInt(minIdleTime, 10),
           Number.parseInt(max, 10),
-          Number.parseInt(expire, 10));
+          Number.parseInt(expire, 10)
+        );
 
         rateLimitSession.requests.push(await checkRateLimit(rateLimitSession, context));
         return true;
@@ -62,15 +68,14 @@ async function checkRateLimit(rateLimitSession: RateLimitSession, context: model
   return new Date();
 }
 
-interface RateLimitSession extends models.UserSession{
+interface RateLimitSession extends models.UserSession {
   slot: string;
   minIdleTime: number;
   max: number;
-  expire: number,
+  expire: number;
   lastRequest?: Date;
   requests: Array<Date>;
 }
-
 
 function isRateLimitSession(session: unknown): session is RateLimitSession {
   const rateLimitSession = session as RateLimitSession;
@@ -111,7 +116,7 @@ function getRateLimitSession(slot: string, minIdleTime: number, max: number, exp
     minIdleTime,
     max,
     expire,
-    requests: []
+    requests: [],
   };
   userSessionStore.setUserSession(result);
   return result;

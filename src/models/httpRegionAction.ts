@@ -1,6 +1,5 @@
 import { ProcessorContext } from './processorContext';
 
-
 /**
  * @returns false if processing cancelled
  */
@@ -9,7 +8,7 @@ export interface HttpRegionAction {
   process(context: ProcessorContext): Promise<boolean>;
 }
 
-export enum ActionType{
+export enum ActionType {
   cookieJar = 'cookieJar',
   defaultHeaders = 'defaultHeaders',
   eventSourceClient = 'eventSourceClient',

@@ -2,7 +2,6 @@ import * as models from '../models';
 import { toEnvironmentKey } from './environmentUtils';
 import { cloneResponse } from './requestUtils';
 
-
 export function getDisplayName(httpRegion?: models.HttpRegion, defaultName = 'global'): string {
   if (httpRegion) {
     if (httpRegion.metaData.title) {
@@ -16,7 +15,9 @@ export function getDisplayName(httpRegion?: models.HttpRegion, defaultName = 'gl
       if (indexQuery < 0) {
         indexQuery = httpRegion.request.url.length;
       }
-      const line = httpRegion.symbol.children?.find?.(obj => obj.kind === models.HttpSymbolKind.requestLine)?.startLine || httpRegion.symbol.startLine;
+      const line =
+        httpRegion.symbol.children?.find?.(obj => obj.kind === models.HttpSymbolKind.requestLine)?.startLine ||
+        httpRegion.symbol.startLine;
       return `${httpRegion.request.method} ${httpRegion.request.url.slice(0, indexQuery)} (line: ${line + 1})`;
     }
   }
@@ -33,15 +34,16 @@ export function getRegionDescription(httpRegion: models.HttpRegion, defaultName 
   return defaultName;
 }
 
-
-export async function processHttpRegionActions(context: models.ProcessorContext, showProgressBar?: boolean): Promise<boolean> {
+export async function processHttpRegionActions(
+  context: models.ProcessorContext,
+  showProgressBar?: boolean
+): Promise<boolean> {
   delete context.httpRegion.response;
   delete context.httpRegion.testResults;
 
   const variables = context.variables;
   try {
     context.scriptConsole?.collectMessages?.();
-
 
     if (context.progress) {
       context.showProgressBar = showProgressBar;
@@ -71,25 +73,21 @@ export async function processHttpRegionActions(context: models.ProcessorContext,
 }
 function initRegionScopedVariables(context: models.ProcessorContext) {
   const env = toEnvironmentKey(context.httpFile.activeEnvironment);
-  const variables = Object.assign(
-    {},
-    context.variables,
-    ...(context.config?.useRegionScopedVariables ? context.httpFile.httpRegions.filter(obj => isGlobalHttpRegion(obj)) : context.httpFile.httpRegions)
-      .map(obj => obj.variablesPerEnv[env])
-  );
+
+  let httpRegions = context.httpFile.httpRegions;
+  if (context.config?.useRegionScopedVariables) {
+    httpRegions = context.httpFile.httpRegions.filter(obj => isGlobalHttpRegion(obj));
+  }
+
+  const variables = Object.assign({}, context.variables, ...httpRegions.map(obj => obj.variablesPerEnv[env]));
 
   if (context.config?.useRegionScopedVariables) {
     Object.assign(
       variables,
-      ...context.httpFile.httpRegions.filter(obj => isGlobalHttpRegion(obj))
-        .map(obj => obj.variablesPerEnv[env])
+      ...context.httpFile.httpRegions.filter(obj => isGlobalHttpRegion(obj)).map(obj => obj.variablesPerEnv[env])
     );
   } else {
-    Object.assign(
-      variables,
-      ...context.httpFile.httpRegions
-        .map(obj => obj.variablesPerEnv[env])
-    );
+    Object.assign(variables, ...context.httpFile.httpRegions.map(obj => obj.variablesPerEnv[env]));
   }
   return variables;
 }
@@ -102,8 +100,10 @@ function autoShareNewVariables(variables: models.Variables, context: models.Proc
   }
 }
 
-
-export async function logResponse(response: models.HttpResponse | undefined, context: models.ProcessorContext): Promise<models.HttpResponse | undefined> {
+export async function logResponse(
+  response: models.HttpResponse | undefined,
+  context: models.ProcessorContext
+): Promise<models.HttpResponse | undefined> {
   if (response) {
     const clone = cloneResponse(response);
     const fileResult = await context.httpFile.hooks.responseLogging.trigger(clone, context);
@@ -114,9 +114,7 @@ export async function logResponse(response: models.HttpResponse | undefined, con
     if (regionResult === models.HookCancel) {
       return undefined;
     }
-    if (!context.httpRegion.metaData.noLog
-      && clone
-      && context.logResponse) {
+    if (!context.httpRegion.metaData.noLog && clone && context.logResponse) {
       await context.logResponse(clone, context.httpRegion);
     }
     return clone;
@@ -125,17 +123,19 @@ export async function logResponse(response: models.HttpResponse | undefined, con
 }
 
 export async function executeGlobalScripts(context: {
-  variables: models.Variables,
-  httpClient: models.HttpClient,
-  httpFile: models.HttpFile,
-  options: Record<string, unknown>
+  variables: models.Variables;
+  httpClient: models.HttpClient;
+  httpFile: models.HttpFile;
+  options: Record<string, unknown>;
 }): Promise<boolean> {
   for (const httpRegion of context.httpFile.httpRegions) {
     if (isGlobalHttpRegion(httpRegion) && !httpRegion.metaData.disabled) {
-      if (!await processHttpRegionActions({
-        ...context,
-        httpRegion,
-      })) {
+      if (
+        !(await processHttpRegionActions({
+          ...context,
+          httpRegion,
+        }))
+      ) {
         return false;
       }
     }
@@ -157,11 +157,9 @@ export function toProcessedHttpRegion(context: models.ProcessorContext): models.
   };
 }
 
-
-export function isGlobalHttpRegion(httpRegion: models.HttpRegion) : boolean {
+export function isGlobalHttpRegion(httpRegion: models.HttpRegion): boolean {
   return !(httpRegion.request || httpRegion.metaData.name);
 }
-
 
 export function isHttpRegionSendContext(context: models.SendContext): context is models.HttpRegionSendContext {
   const guard = context as models.HttpRegionSendContext;

@@ -1,20 +1,20 @@
-import * as models from '../models';
 import { fileProvider, userInteractionProvider } from '../io';
-import { promises as fs, createReadStream } from 'fs';
-import { join, isAbsolute, dirname } from 'path';
-import inquirer from 'inquirer';
+import * as models from '../models';
 import clipboard from 'clipboardy';
+import { promises as fs, createReadStream } from 'fs';
+import inquirer from 'inquirer';
+import { join, isAbsolute, dirname } from 'path';
 
 export function initIOProvider(): void {
   initFileProvider();
   initUserInteractionProvider();
 }
 
-
 function initFileProvider(): void {
   fileProvider.isAbsolute = async (fileName: models.PathLike) => isAbsolute(fileProvider.toString(fileName));
   fileProvider.dirname = (fileName: string) => dirname(fileProvider.toString(fileName));
-  fileProvider.joinPath = (fileName: models.PathLike, path: string): models.PathLike => join(fileProvider.toString(fileName), path);
+  fileProvider.joinPath = (fileName: models.PathLike, path: string): models.PathLike =>
+    join(fileProvider.toString(fileName), path);
 
   fileProvider.exists = async (fileName: models.PathLike): Promise<boolean> => {
     try {
@@ -32,10 +32,11 @@ function initFileProvider(): void {
     const stream = createReadStream(file);
     return toBuffer(stream);
   };
-  fileProvider.writeBuffer = (fileName: models.PathLike, buffer: Buffer) => fs.writeFile(fileProvider.toString(fileName), buffer);
-  fileProvider.readdir = async (dirname: models.PathLike): Promise<string[]> => fs.readdir(fileProvider.toString(dirname));
+  fileProvider.writeBuffer = (fileName: models.PathLike, buffer: Buffer) =>
+    fs.writeFile(fileProvider.toString(fileName), buffer);
+  fileProvider.readdir = async (dirname: models.PathLike): Promise<string[]> =>
+    fs.readdir(fileProvider.toString(dirname));
 }
-
 
 function toBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
   return new Promise<Buffer>((resolve, reject) => {
@@ -53,33 +54,37 @@ function toBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
   });
 }
 
-
 function initUserInteractionProvider() {
-
   userInteractionProvider.showNote = async function showNote(note: string) {
-    const answer = await inquirer.prompt([{
-      type: 'confirm',
-      name: 'note',
-      message: note,
-    }]);
+    const answer = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'note',
+        message: note,
+      },
+    ]);
     return answer.note;
   };
   userInteractionProvider.showInputPrompt = async function showInputPrompt(message: string, defaultValue?: string) {
-    const answer = await inquirer.prompt([{
-      type: 'input',
-      name: 'placeholder',
-      message,
-      default: defaultValue
-    }]);
+    const answer = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'placeholder',
+        message,
+        default: defaultValue,
+      },
+    ]);
     return answer.placeholder;
   };
   userInteractionProvider.showListPrompt = async function showListPrompt(message: string, values: string[]) {
-    const answer = await inquirer.prompt([{
-      type: 'list',
-      name: 'placeholder',
-      message,
-      choices: values
-    }]);
+    const answer = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'placeholder',
+        message,
+        choices: values,
+      },
+    ]);
     return answer.placeholder;
   };
   userInteractionProvider.getClipboard = async function getClipboard() {

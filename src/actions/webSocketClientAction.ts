@@ -1,14 +1,12 @@
+import * as io from '../io';
 import * as models from '../models';
 import * as utils from '../utils';
 import WebSocket, { ClientOptions } from 'ws';
-import * as io from '../io';
-
 
 const WEBSOCKET_CLOSE_NORMAL = 1000;
 const WEBSOCKET_CLOSE_GOING_AWAY = 1001;
 export class WebSocketClientAction implements models.HttpRegionAction {
   id = models.ActionType.websocketClient;
-
 
   async process(context: models.ProcessorContext): Promise<boolean> {
     const { request } = context;
@@ -47,12 +45,12 @@ export class WebSocketClientAction implements models.HttpRegionAction {
       options.headers = request.headers;
 
       const responseTemplate: Partial<models.HttpResponse> = {
-        request
+        request,
       };
       const mergedData: Array<unknown> = [];
       const loadingPromises: Array<Promise<unknown>> = [];
 
-      const getResponseTemplate: (() => Partial<models.HttpResponse>) = () => {
+      const getResponseTemplate: () => Partial<models.HttpResponse> = () => {
         responseTemplate.timings = {
           total: new Date().getTime() - startTime,
         };
@@ -75,7 +73,8 @@ export class WebSocketClientAction implements models.HttpRegionAction {
         }
         utils.setVariableInContext(webSocketVariables, context);
         context.variables.websocketClient = client;
-        context.httpRegion.hooks.onStreaming.trigger(context)
+        context.httpRegion.hooks.onStreaming
+          .trigger(context)
           .then(() => client.close(WEBSOCKET_CLOSE_NORMAL, 'CLOSE_NORMAL'))
           .catch(err => reject(err));
       });
@@ -117,7 +116,6 @@ export class WebSocketClientAction implements models.HttpRegionAction {
         await Promise.all(loadingPromises);
         resolve(this.toMergedHttpResponse(code, reason, mergedData, getResponseTemplate()));
       });
-
     });
   }
 
@@ -133,7 +131,7 @@ export class WebSocketClientAction implements models.HttpRegionAction {
     return response;
   }
 
-  private toStringBody(data: unknown) : string {
+  private toStringBody(data: unknown): string {
     if (Buffer.isBuffer(data)) {
       return data.toString('utf-8');
     }
@@ -144,7 +142,10 @@ export class WebSocketClientAction implements models.HttpRegionAction {
     return JSON.stringify(jsonData, null, 2);
   }
 
-  private toHttpResponse(data: string | Array<unknown>, responseTemplate: Partial<models.HttpResponse>): models.HttpResponse {
+  private toHttpResponse(
+    data: string | Array<unknown>,
+    responseTemplate: Partial<models.HttpResponse>
+  ): models.HttpResponse {
     const body = utils.isString(data) ? data : JSON.stringify(data, null, 2);
     const rawBody: Buffer = Buffer.from(body);
     const response: models.HttpResponse = {
@@ -159,7 +160,7 @@ export class WebSocketClientAction implements models.HttpRegionAction {
       contentType: {
         mimeType: 'application/json',
         charset: 'UTF-8',
-        contentType: 'application/json; charset=utf-8'
+        contentType: 'application/json; charset=utf-8',
       },
     };
     if (this.isWebsocketError(data)) {
@@ -169,8 +170,7 @@ export class WebSocketClientAction implements models.HttpRegionAction {
     return response;
   }
 
-  private isWebsocketError(data: unknown): data is Error & {code: string} {
+  private isWebsocketError(data: unknown): data is Error & { code: string } {
     return data instanceof Error;
   }
-
 }

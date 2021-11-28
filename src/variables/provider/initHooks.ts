@@ -1,10 +1,10 @@
+import { ProvideVariablesHook, ProvideEnvironmentsHook } from '../../models';
 import { provideConfigVariables, provideConfigEnvironments } from './configVariableProvider';
 import { provideDotenvVariables, provideDotenvEnvironments } from './dotenvVariableProvider';
-import { provideIntellijVariables, provideIntellijEnvironments } from './intellijVariableProvider';
 import { provideIntellijGlobalVariables } from './intellijGlobalVariableProvider';
-import { ProvideVariablesHook, ProvideEnvironmentsHook } from '../../models';
+import { provideIntellijVariables, provideIntellijEnvironments } from './intellijVariableProvider';
 
-export enum VariableProviderType{
+export enum VariableProviderType {
   config = 'config',
   dotenv = 'dotenv',
   httpFileImports = 'httpFileImports',
@@ -24,14 +24,12 @@ export function initProvideVariablesHook(): ProvideVariablesHook {
   return hook;
 }
 
-
 export function initProvideEnvironmentsHook(): ProvideEnvironmentsHook {
   const hook = new ProvideEnvironmentsHook();
 
   hook.addHook(VariableProviderType.config, provideConfigEnvironments);
   hook.addHook(VariableProviderType.dotenv, provideDotenvEnvironments);
   hook.addHook(VariableProviderType.intellij, provideIntellijEnvironments);
-
 
   return hook;
 }

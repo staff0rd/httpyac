@@ -1,9 +1,9 @@
-import { OpenIdConfiguration } from './openIdConfiguration';
+import { log } from '../../../io';
 import * as models from '../../../models';
 import * as utils from '../../../utils';
-import { log } from '../../../io';
+import { OpenIdConfiguration } from './openIdConfiguration';
 
-export interface OpenIdInformation extends models.UserSession{
+export interface OpenIdInformation extends models.UserSession {
   time: number;
   config: OpenIdConfiguration;
   accessToken: string;
@@ -13,13 +13,12 @@ export interface OpenIdInformation extends models.UserSession{
   refreshExpiresIn?: number;
 }
 
-export interface OpenIdContext{
-  httpClient: models.HttpClient,
+export interface OpenIdContext {
+  httpClient: models.HttpClient;
 }
 
-
-export interface OpenIdSesssion extends Omit<models.UserSession, 'type'>{
-  config: OpenIdConfiguration,
+export interface OpenIdSesssion extends Omit<models.UserSession, 'type'> {
+  config: OpenIdConfiguration;
 }
 
 export async function requestOpenIdInformation(
@@ -37,11 +36,13 @@ export async function requestOpenIdInformation(
     }
 
     if (request.headers && options.config.useAuthorizationHeader) {
-      request.headers.authorization = `Basic ${Buffer.from(`${options.config.clientId}:${options.config.clientSecret}`).toString('base64')}`;
+      request.headers.authorization = `Basic ${Buffer.from(
+        `${options.config.clientId}:${options.config.clientSecret}`
+      ).toString('base64')}`;
     } else {
       request.body = `${request.body}&${utils.toQueryParams({
         client_id: options.config.clientId,
-        client_secret: options.config.clientSecret
+        client_secret: options.config.clientSecret,
       })}`;
     }
 
@@ -58,7 +59,11 @@ export async function requestOpenIdInformation(
   return false;
 }
 
-export function toOpenIdInformation(jwtToken: unknown, time: number, session: OpenIdSesssion): OpenIdInformation | false {
+export function toOpenIdInformation(
+  jwtToken: unknown,
+  time: number,
+  session: OpenIdSesssion
+): OpenIdInformation | false {
   if (isAuthToken(jwtToken)) {
     const parsedToken = utils.decodeJWT(jwtToken.access_token);
     if (parsedToken) {
@@ -77,7 +82,6 @@ export function toOpenIdInformation(jwtToken: unknown, time: number, session: Op
   }
   return false;
 }
-
 
 export function isAuthToken(obj: unknown): obj is AuthToken {
   const guard = obj as AuthToken;

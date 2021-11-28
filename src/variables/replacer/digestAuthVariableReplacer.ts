@@ -1,13 +1,16 @@
 import { ProcessorContext } from '../../models';
-import { CancelableRequest, OptionsOfUnknownResponseBody, Response } from 'got';
-import { createHash } from 'crypto';
-import { v4 as uuidv4 } from 'uuid';
-import { URL } from 'url';
 import { ParserRegex } from '../../parser';
 import { isHttpRequest, isString } from '../../utils';
+import { createHash } from 'crypto';
+import { CancelableRequest, OptionsOfUnknownResponseBody, Response } from 'got';
+import { URL } from 'url';
+import { v4 as uuidv4 } from 'uuid';
 
-
-export async function digestAuthVariableReplacer(text: unknown, type: string, { request }: ProcessorContext): Promise<unknown> {
+export async function digestAuthVariableReplacer(
+  text: unknown,
+  type: string,
+  { request }: ProcessorContext
+): Promise<unknown> {
   if (type.toLowerCase() === 'authorization' && isString(text) && isHttpRequest(request)) {
     const match = ParserRegex.auth.digest.exec(text);
 
@@ -25,21 +28,20 @@ export async function digestAuthVariableReplacer(text: unknown, type: string, { 
   return text;
 }
 
-
 function digestFactory(username: string, password: string) {
-  return function digestAfterResponse(response: Response, retryWithMergedOptions: (options: OptionsOfUnknownResponseBody) => CancelableRequest<Response>) {
+  return function digestAfterResponse(
+    response: Response,
+    retryWithMergedOptions: (options: OptionsOfUnknownResponseBody) => CancelableRequest<Response>
+  ) {
     const wwwAuthenticate = response.headers['www-authenticate'];
-    if (response.statusCode === 401
-      && wwwAuthenticate
-      && wwwAuthenticate.toLowerCase().startsWith('digest')) {
-
+    if (response.statusCode === 401 && wwwAuthenticate && wwwAuthenticate.toLowerCase().startsWith('digest')) {
       const url = new URL(response.url);
       const challenge = {
         qop: '',
         algorithm: '',
         realm: '',
         nonce: '',
-        opaque: ''
+        opaque: '',
       };
 
       /* see https://github.com/request/request/blob/master/lib/auth.js#L63-L123*/
@@ -66,9 +68,9 @@ function digestFactory(username: string, password: string) {
             nc,
             cnonce,
             algorithm: challenge.algorithm,
-            opaque: challenge.opaque
-          })}`
-        }
+            opaque: challenge.opaque,
+          })}`,
+        },
       });
     }
 
@@ -91,12 +93,18 @@ function createDigestHeader(authValues: Record<string, string | boolean>) {
 }
 
 function md5(value: string | Buffer) {
-
   // lgtm [js/weak-cryptographic-algorithm, js/insufficient-password-hash]
   return createHash('md5').update(value).digest('hex');
 }
 
-function ha1Compute(algorithm: string | undefined, username: string, password: string, realm: string, nonce: string, cnonce: string | false) {
+function ha1Compute(
+  algorithm: string | undefined,
+  username: string,
+  password: string,
+  realm: string,
+  nonce: string,
+  cnonce: string | false
+) {
   const ha1 = md5(`${username}:${realm}:${password}`);
   if (cnonce && algorithm?.toLowerCase() === 'md5-sess') {
     return md5(`${ha1}:${nonce}:${cnonce}`);
@@ -104,9 +112,7 @@ function ha1Compute(algorithm: string | undefined, username: string, password: s
   return ha1;
 }
 
-
 function updateChallenge(challenge: Record<string, string>, wwwAuthenticate: string) {
-
   for (const item of wwwAuthenticate.split(',')) {
     const match = /([a-z0-9_-]+)=(?:"([^"]+)"|([a-z0-9_-]+))/giu.exec(item);
     if (match) {

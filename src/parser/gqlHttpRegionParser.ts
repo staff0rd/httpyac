@@ -1,9 +1,8 @@
+import { GqlAction, GqlData } from '../actions';
+import { fileProvider } from '../io';
 import * as models from '../models';
 import * as utils from '../utils';
-import { GqlAction, GqlData } from '../actions';
 import { ParserRegex } from './parserRegex';
-import { fileProvider } from '../io';
-
 
 export async function parseGraphql(
   getLineReader: models.getHttpLineGenerator,
@@ -35,15 +34,17 @@ export async function parseGraphql(
     }
     return {
       nextParserLine: gqlContent.endLine,
-      symbols: [{
-        name: 'gql',
-        description: 'gql',
-        kind: models.HttpSymbolKind.gql,
-        startLine: gqlContent.startLine,
-        startOffset: 0,
-        endLine: gqlContent.endLine,
-        endOffset: gqlContent.endOffset,
-      }]
+      symbols: [
+        {
+          name: 'gql',
+          description: 'gql',
+          kind: models.HttpSymbolKind.gql,
+          startLine: gqlContent.startLine,
+          startOffset: 0,
+          endLine: gqlContent.endLine,
+          endOffset: gqlContent.endOffset,
+        },
+      ],
     };
   }
   return false;
@@ -58,27 +59,21 @@ function getGqlFragments(context: models.ParserContext) {
   return result;
 }
 
-
 async function getGQLContent(lineReader: models.HttpLineGenerator): Promise<GqlParserResult | false> {
   const next = lineReader.next();
   if (!next.done) {
-
     const startLine = next.value.line;
 
     const fileMatches = ParserRegex.gql.fileImport.exec(next.value.textLine);
     if (fileMatches && fileMatches.groups?.fileName) {
-
       const parserPath = fileMatches.groups.fileName;
       return {
         startLine,
         endLine: startLine,
         endOffset: next.value.textLine.length,
         name: fileMatches.groups.name || fileMatches.groups.fileName,
-        gql: (context: models.ProcessorContext) => utils.replaceFilePath(
-          parserPath,
-          context,
-          (path: models.PathLike) => fileProvider.readFile(path, 'utf-8')
-        )
+        gql: (context: models.ProcessorContext) =>
+          utils.replaceFilePath(parserPath, context, (path: models.PathLike) => fileProvider.readFile(path, 'utf-8')),
       };
     }
     const queryMatch = ParserRegex.gql.query.exec(next.value.textLine);
@@ -89,36 +84,50 @@ async function getGQLContent(lineReader: models.HttpLineGenerator): Promise<GqlP
     if (fragmentMatch) {
       return matchGqlContent(next.value, lineReader, fragmentMatch.groups?.name);
     }
-
   }
   return false;
 }
 
-
-function matchGqlContent(value: { textLine: string; line: number }, lineReader: models.HttpLineGenerator, name: string | undefined): GqlParserResult | false {
-  const startLine = value.line;
+function matchGqlContent(
+  value: { textLine: string; line: number },
+  lineReader: models.HttpLineGenerator,
+  name: string | undefined
+): GqlParserResult {
   let next = lineReader.next();
+  let prevReader = {
+    endLine: value.line,
+    endOffset: value.textLine.length,
+  };
   const gqlLines: Array<string> = [value.textLine];
   while (!next.done) {
+    prevReader = {
+      endLine: next.value.line,
+      endOffset: next.value.textLine.length,
+    };
     if (ParserRegex.emptyLine.test(next.value.textLine)) {
       return {
         name,
-        startLine,
-        endLine: next.value.line,
-        endOffset: next.value.textLine.length,
+        startLine: value.line,
+        ...prevReader,
         gql: utils.toMultiLineString(gqlLines),
       };
     }
     gqlLines.push(next.value.textLine);
+
     next = lineReader.next();
   }
-  return false;
+  return {
+    name,
+    startLine: value.line,
+    ...prevReader,
+    gql: utils.toMultiLineString(gqlLines),
+  };
 }
 
-export interface GqlParserResult{
-  name?: string,
-  startLine: number,
-  endLine: number,
+export interface GqlParserResult {
+  name?: string;
+  startLine: number;
+  endLine: number;
   endOffset: number;
   gql: string | ((context: models.ProcessorContext) => Promise<string | undefined>);
 }

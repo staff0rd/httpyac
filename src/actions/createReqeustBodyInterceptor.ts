@@ -1,14 +1,14 @@
+import { fileProvider } from '../io';
 import * as models from '../models';
 import * as utils from '../utils';
-import { fileProvider } from '../io';
 import { EOL } from 'os';
 
-
 export class CreateRequestBodyInterceptor implements models.HookInterceptor<models.ProcessorContext, boolean | void> {
-
   constructor(private readonly rawBody: Array<string | models.RequestBodyImport>) {}
 
-  async beforeTrigger(context: models.HookTriggerContext<models.ProcessorContext, boolean | undefined>): Promise<boolean | undefined> {
+  async beforeTrigger(
+    context: models.HookTriggerContext<models.ProcessorContext, boolean | undefined>
+  ): Promise<boolean | undefined> {
     if (context.arg.request && context.index === 0) {
       const contentType = context.arg.request.contentType;
       const requestBodyLines = await this.normalizeBody(this.rawBody, context.arg);
@@ -32,7 +32,7 @@ export class CreateRequestBodyInterceptor implements models.HookInterceptor<mode
               strings.push(line);
             } else {
               if (strings.length > 0) {
-                strings.push(lineEnding);
+                strings.push('');
                 body.push(strings.join(lineEnding));
                 strings.length = 0;
               }
@@ -65,8 +65,7 @@ export class CreateRequestBodyInterceptor implements models.HookInterceptor<mode
       if (context.config?.requestBodyInjectVariablesExtensions) {
         const extname = utils.extensionName(filename);
         if (extname) {
-          return context.config.requestBodyInjectVariablesExtensions
-            .indexOf(extname) >= 0;
+          return context.config.requestBodyInjectVariablesExtensions.indexOf(extname) >= 0;
         }
       }
       return false;
@@ -94,7 +93,7 @@ export class CreateRequestBodyInterceptor implements models.HookInterceptor<mode
     const result = body.reduce((previousValue, currentValue, currentIndex) => {
       let prev = previousValue;
       if (utils.isString(currentValue)) {
-        prev += `${(currentIndex === 0 || currentValue.startsWith('&') ? '' : EOL)}${currentValue}`;
+        prev += `${currentIndex === 0 || currentValue.startsWith('&') ? '' : EOL}${currentValue}`;
       }
       return prev;
     }, '');

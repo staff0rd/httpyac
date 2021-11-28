@@ -1,16 +1,14 @@
+import { IntellijScriptData, IntellijAction } from '../actions';
 import * as models from '../models';
 import { toMultiLineString } from '../utils';
-import { IntellijScriptData, IntellijAction } from '../actions';
 import { ParserRegex } from './parserRegex';
 
-
 export interface IntelliJParserResult {
-  startLine: number,
-  endLine: number,
+  startLine: number;
+  endLine: number;
   endOffset: number;
   data: models.ScriptData | IntellijScriptData;
 }
-
 
 export async function parseIntellijScript(
   getLineReader: models.getHttpLineGenerator,
@@ -18,33 +16,32 @@ export async function parseIntellijScript(
 ): Promise<models.HttpRegionParserResult> {
   const lineReader = getLineReader();
   if (httpRegion.request) {
-
     const intellijContent = getIntellijContent(lineReader);
 
     if (intellijContent) {
       httpRegion.hooks.execute.addObjHook(obj => obj.process, new IntellijAction(intellijContent.data));
       return {
         nextParserLine: intellijContent.endLine,
-        symbols: [{
-          name: 'Intellij Script',
-          description: 'Intellij Script',
-          kind: models.HttpSymbolKind.script,
-          startLine: intellijContent.startLine,
-          startOffset: 0,
-          endLine: intellijContent.endLine,
-          endOffset: intellijContent.endOffset,
-        }],
+        symbols: [
+          {
+            name: 'Intellij Script',
+            description: 'Intellij Script',
+            kind: models.HttpSymbolKind.script,
+            startLine: intellijContent.startLine,
+            startOffset: 0,
+            endLine: intellijContent.endLine,
+            endOffset: intellijContent.endOffset,
+          },
+        ],
       };
     }
   }
   return false;
 }
 
-
 function getIntellijContent(lineReader: models.HttpLineGenerator): IntelliJParserResult | false {
   let next = lineReader.next();
   if (!next.done) {
-
     const startLine = next.value.line;
 
     const fileMatches = ParserRegex.intellij.import.exec(next.value.textLine);
@@ -54,8 +51,8 @@ function getIntellijContent(lineReader: models.HttpLineGenerator): IntelliJParse
         endLine: startLine,
         endOffset: next.value.textLine.length,
         data: {
-          fileName: fileMatches.groups.fileName
-        }
+          fileName: fileMatches.groups.fileName,
+        },
       };
     }
 
@@ -68,7 +65,7 @@ function getIntellijContent(lineReader: models.HttpLineGenerator): IntelliJParse
         data: {
           script: singleLineMatch.groups.script,
           lineOffset: startLine,
-        }
+        },
       };
     }
 
@@ -84,14 +81,13 @@ function getIntellijContent(lineReader: models.HttpLineGenerator): IntelliJParse
             endOffset: next.value.textLine.length,
             data: {
               script: toMultiLineString(scriptLines),
-              lineOffset: startLine
-            }
+              lineOffset: startLine,
+            },
           };
         }
         scriptLines.push(next.value.textLine);
         next = lineReader.next();
       }
-
     }
   }
   return false;
